@@ -1,62 +1,101 @@
 import streamlit as st
-import networkx as nx
 import pandas as pd
-import numpy as np
 from googlemaps import Client as GoogleMaps
-import time
+import pydeck as pdk
+import os
 
-# Configurar API Key do Google Maps
-API_KEY = "AIzaSyDZGdHHwZFKGXMQIy_kkgDv7-oIseNGnsA"
+# Configuração da API Key do Google Maps
+API_KEY = os.getenv("AIzaSyDZGdHHwZFKGXMQIy_kkgDv7-oIseNGnsA", "")  # Substitua ou defina sua chave no ambiente
 gmaps = GoogleMaps(API_KEY)
 
 # Simulação de Usuários Cadastrados
 USUARIOS = {"admin": "1234", "usuario": "senha123"}
 
 # Login
-st.sidebar.title("🔑 Login")
-username = st.sidebar.text_input("Usuário")
-password = st.sidebar.text_input("Senha", type="password")
-if st.sidebar.button("Entrar"):
-    if username in USUARIOS and USUARIOS[username] == password:
-        st.session_state["logado"] = True
-        st.session_state["usuario"] = username
-        st.session_state["carrinho"] = {}
-        st.sidebar.success(f"Bem-vindo, {username}!")
-    else:
-        st.sidebar.error("Usuário ou senha incorretos!")
-        st.stop()
+if "logado" not in st.session_state or not st.session_state["logado"]:
+    st.sidebar.title("🔑 Login")
+    username = st.sidebar.text_input("Usuário")
+    password = st.sidebar.text_input("Senha", type="password")
+    
+    if st.sidebar.button("Entrar"):
+        if username in USUARIOS and USUARIOS[username] == password:
+            st.session_state["logado"] = True
+            st.session_state["usuario"] = username
+            st.session_state["carrinho"] = {}
+            st.sidebar.success(f"Bem-vindo, {username}!")
+            st.experimental_rerun()
+        else:
+            st.sidebar.error("Usuário ou senha incorretos!")
+            st.stop()
+else:
+    st.sidebar.success(f"Bem-vindo de volta, {st.session_state['usuario']}!")
 
-# Verifica login
-if "logado" not in st.session_state:
-    st.session_state["logado"] = False
-
-if not st.session_state["logado"]:
-    st.stop()
-
-# Criando abas
+# Abas do aplicativo
 aba = st.sidebar.radio("Escolha uma opção:", ["🗺️ Planejar Rota", "🛍️ Loja Sustentável"])
 
-# Planejador de Rota com Google Maps
+# Função para calcular rota
 def calcular_rota(inicio, destino):
     directions = gmaps.directions(inicio, destino, mode="bicycling")
     rota_coords = []
     for step in directions[0]['legs'][0]['steps']:
-        rota_coords.append((step['start_location']['lat'], step['start_location']['lng']))
-        rota_coords.append((step['end_location']['lat'], step['end_location']['lng']))
+        rota_coords.append({
+            'lat': step['start_location']['lat'],
+            'lon': step['start_location']['lng']
+        })
+        rota_coords.append({
+            'lat': step['end_location']['lat'],
+            'lon': step['end_location']['lng']
+        })
     return rota_coords
 
+# Aba Planejador de Rota
 if aba == "🗺️ Planejar Rota":
     st.title("🚴 Planejador de Rota com Google Maps")
     inicio = st.text_input("Endereço de Partida", "Lisboa, Portugal")
     destino = st.text_input("Endereço de Destino", "Sintra, Portugal")
+    
     if st.button("Calcular Rota"):
-        try:
-            rota = calcular_rota(inicio, destino)
-            st.map(pd.DataFrame(rota, columns=['lat', 'lon']))
-        except Exception as e:
-            st.error(f"Erro ao calcular a rota: {e}")
+        if not API_KEY:
+            st.error("❌ A API Key do Google Maps não está configurada.")
+        else:
+            try:
+                rota = calcular_rota(inicio, destino)
+                if rota:
+                    df_rota = pd.DataFrame(rota)
 
-#with tabs[1]:  # Correção da posição da aba Loja Online
+                    # Exibir o mapa com visualização 3D usando pydeck
+                    view_state = pdk.ViewState(
+                        latitude=df_rota['lat'].mean(),
+                        longitude=df_rota['lon'].mean(),
+                        zoom=12,
+                        pitch=60,  # Inclinação para visão 3D
+                        bearing=0
+                    )
+
+                    layer = pdk.Layer(
+                        'PathLayer',
+                        data=df_rota,
+                        get_path='[["lat", "lon"]]',
+                        get_color=[0, 100, 200],
+                        width_scale=5,
+                        width_min_pixels=3,
+                        rounded=True
+                    )
+
+                    st.pydeck_chart(pdk.Deck(
+                        map_style='mapbox://styles/mapbox/satellite-streets-v11',  # Visão de satélite com ruas
+                        initial_view_state=view_state,
+                        layers=[layer]
+                    ))
+
+                    st.success("Rota calculada e exibida com sucesso!")
+                else:
+                    st.warning("⚠️ Nenhuma rota encontrada para os endereços fornecidos.")
+            except Exception as e:
+                st.error(f"Erro ao calcular a rota: {e}")
+
+# Aba Loja Sustentável
+elif aba == "🛍️ Loja Sustentável":
     st.title("🛍️ Loja Sustentável")
 
     # Lista de produtos
@@ -81,7 +120,7 @@ if aba == "🗺️ Planejar Rota":
         else:
             st.session_state["carrinho"][produto] = 1
 
-    cols = st.columns(3)  # Ajusta a disposição dos produtos
+    cols = st.columns(3)
 
     for i, produto in enumerate(produtos):
         with cols[i % 3]:
@@ -95,138 +134,25 @@ if aba == "🗺️ Planejar Rota":
     st.sidebar.title("🛒 Carrinho de Compras")
     if st.session_state["carrinho"]:
         total = 0
+        pedido = ""
         for item, qtd in st.session_state["carrinho"].items():
             preco = next(p["preco"] for p in produtos if p["nome"] == item)
             subtotal = preco * qtd
             total += subtotal
+            pedido += f"{item} ({qtd}x) - 💲{subtotal:.2f}\n"
             st.sidebar.write(f"{item} ({qtd}x) - 💲{subtotal:.2f}")
 
         st.sidebar.write(f"**Total: 💲{total:.2f}**")
+
+        endereco = st.sidebar.text_input("📍 Endereço de Entrega")
+        pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
+
         if st.sidebar.button("✅ Finalizar Pedido"):
-            st.sidebar.success("Pedido realizado com sucesso! 🌱")
-            st.session_state["carrinho"] = {}
+            if endereco:
+                st.sidebar.success("Pedido realizado com sucesso! 📩")
+                st.session_state["carrinho"] = {}
+            else:
+                st.sidebar.error("❌ Informe um endereço de entrega.")
     else:
         st.sidebar.write("Seu carrinho está vazio.")
 
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import streamlit as st
-
-# Função para enviar o e-mail
-def enviar_email(pedido, total):
-    remetente = "seuemail@gmail.com"  # Substitua pelo seu e-mail
-    senha = "suasenha"  # Use senha do app se necessário (não use senhas reais diretamente no código)
-    destinatario = "seuemail@gmail.com"  # E-mail para onde o pedido será enviado
-
-    msg = MIMEMultipart()
-    msg["From"] = remetente
-    msg["To"] = destinatario
-    msg["Subject"] = "Novo Pedido - Loja Sustentável"
-
-    corpo_email = f"""
-    Novo pedido recebido! 🛍️
-
-    Produtos:
-    {pedido}
-
-    Total: 💲{total:.2f}
-
-    Forma de pagamento: Transferência bancária / MB Way / PayPal
-    Endereço de entrega: [Preencher com o endereço do cliente]
-
-    Obrigado por sua compra! 🌱
-    """
-
-    msg.attach(MIMEText(corpo_email, "plain"))
-
-    try:
-        servidor = smtplib.SMTP("smtp.gmail.com", 587)
-        servidor.starttls()
-        servidor.login(remetente, senha)
-        servidor.sendmail(remetente, destinatario, msg.as_string())
-        servidor.quit()
-        return True
-    except Exception as e:
-        return False
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import streamlit as st
-
-# Configuração do e-mail
-EMAIL_REMETENTE = "seuemail@gmail.com"  # Substitua pelo seu e-mail
-SENHA_EMAIL = "suasenha"  # Use uma senha de aplicativo para maior segurança
-EMAIL_DESTINATARIO = "seuemail@gmail.com"  # Para onde o pedido será enviado
-SMTP_SERVIDOR = "smtp.gmail.com"
-SMTP_PORTA = 587
-
-def enviar_email(pedido, total, endereco, pagamento):
-    msg = MIMEMultipart()
-    msg["From"] = EMAIL_REMETENTE
-    msg["To"] = EMAIL_DESTINATARIO
-    msg["Subject"] = "Novo Pedido - Loja Sustentável"
-
-    corpo_email = f"""
-    🛍️ Novo pedido recebido!
-
-    Produtos:
-    {pedido}
-
-    Total: 💲{total:.2f}
-
-    Forma de pagamento: {pagamento}
-    Endereço de entrega: {endereco}
-
-    Obrigado por sua compra! 🌱
-    """
-    msg.attach(MIMEText(corpo_email, "plain"))
-
-    try:
-        servidor = smtplib.SMTP(SMTP_SERVIDOR, SMTP_PORTA)
-        servidor.starttls()
-        servidor.login(EMAIL_REMETENTE, SENHA_EMAIL)
-        servidor.sendmail(EMAIL_REMETENTE, EMAIL_DESTINATARIO, msg.as_string())
-        servidor.quit()
-        return True
-    except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
-        return False
-
-# Inicializa o carrinho na sessão
-if "carrinho" not in st.session_state:
-    st.session_state["carrinho"] = {}
-
-
-    st.sidebar.title("🛒 Carrinho de Compras")
-
-if st.session_state["carrinho"]:
-    total = 0
-    pedido = ""
-    for item, qtd in st.session_state["carrinho"].items():
-        preco = next(p["preco"] for p in produtos if p["nome"] == item)
-        subtotal = preco * qtd
-        total += subtotal
-        pedido += f"{item} ({qtd}x) - 💲{subtotal:.2f}\n"
-
-st.sidebar.write(f"**Total: 💲{total:.2f}**")
-endereco = st.sidebar.text_input("📍 Endereço de Entrega")
-pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
-
-if st.sidebar.button("✅ Finalizar Pedido"):
-    if endereco:
-        if enviar_email(pedido, total, endereco, pagamento):
-            st.sidebar.success("Pedido realizado com sucesso! Um e-mail foi enviado. 📩")
-            st.session_state["carrinho"] = {}
-        else:
-            st.sidebar.error("❌ Erro ao enviar e-mail. Tente novamente.")
-    else:
-        st.sidebar.error("❌ Informe um endereço de entrega.")
-else:
-    st.sidebar.write("Seu carrinho está vazio.")
-
-
-#else:
-    #st.sidebar.error("❌ Credenciais incorretas")

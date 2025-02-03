@@ -6,7 +6,7 @@ from googlemaps import Client as GoogleMaps
 import time
 
 # Configurar API Key do Google Maps
-API_KEY = "012F7A-A60A55-905E3B"
+API_KEY = "AIzaSyDZGdHHwZFKGXMQIy_kkgDv7-oIseNGnsA"
 gmaps = GoogleMaps(API_KEY)
 
 # Simulação de Usuários Cadastrados

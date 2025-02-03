@@ -212,8 +212,8 @@ if st.session_state["carrinho"]:
         pedido += f"{item} ({qtd}x) - 💲{subtotal:.2f}\n"
 
 st.sidebar.write(f"**Total: 💲{total:.2f}**")
-    endereco = st.sidebar.text_input("📍 Endereço de Entrega")
-    pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
+endereco = st.sidebar.text_input("📍 Endereço de Entrega")
+pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
 
 if st.sidebar.button("✅ Finalizar Pedido"):
     if endereco:

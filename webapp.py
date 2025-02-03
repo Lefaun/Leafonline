@@ -6,7 +6,7 @@ import os
 import os
 from googlemaps import Client as GoogleMaps
 
-API_KEY = os.getenv("AIzaSyBMxslGJjJ74M0xjISyZ_pcVFsOQo9h2dg")
+API_KEY = os.getenv("AIzaSyA_g2SB__pcNFESWTfuO6Ek1xlns9VWrZg")
 if not API_KEY:
     raise ValueError("API Key do Google Maps não encontrada! Defina a variável de ambiente 'GOOGLE_MAPS_API_KEY'.")
 

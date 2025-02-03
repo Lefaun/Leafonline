@@ -5,6 +5,7 @@ import pydeck as pdk
 import os
 
 # Configuração da API Key do Google Maps
+
 API_KEY = os.getenv("AIzaSyDZGdHHwZFKGXMQIy_kkgDv7-oIseNGnsA", "")  # Substitua ou defina sua chave no ambiente
 gmaps = GoogleMaps(API_KEY)
 

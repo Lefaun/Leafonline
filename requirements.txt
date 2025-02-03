@@ -6,3 +6,10 @@ folium
 scikit-learn
 streamlit-folium
 googlemaps
+streamlit==1.30.0
+googlemaps==4.10.0
+pandas==2.1.4
+numpy==1.26.3
+networkx==3.2.1
+smtplib  # Parte da biblioteca padrão do Python, não precisa instalar separadamente
+email  # Também faz parte da biblioteca padrão do Python

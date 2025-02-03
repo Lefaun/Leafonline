@@ -1,8 +1,6 @@
-
-streamlit
+streamlit==1.30.0
 googlemaps==4.10.0
 pandas==2.1.4
 numpy==1.26.3
 networkx==3.2.1
-smtplib  
-email  
+pydeck==0.8.0  # Para visualização 3D de mapas no Streamlit

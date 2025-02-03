@@ -3,9 +3,12 @@ import pandas as pd
 from googlemaps import Client as GoogleMaps
 import pydeck as pdk
 import os
+import os
+from googlemaps import Client as GoogleMaps
 
-# Configuração da API Key do Google Maps
-API_KEY = os.getenv("AIzaSyAkPJH37XU0etR2jnHze7LN19ALsk9i64w", "")  # Substitua ou defina sua chave no ambiente
+API_KEY = os.getenv("AIzaSyAkPJH37XU0etR2jnHze7LN19ALsk9i64w")
+if not API_KEY:
+    raise ValueError("API Key do Google Maps não encontrada! Defina a variável de ambiente 'GOOGLE_MAPS_API_KEY'.")
 
 gmaps = GoogleMaps(API_KEY)
 

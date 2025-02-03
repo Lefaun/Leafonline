@@ -115,40 +115,40 @@ import streamlit as st
 
 # Função para enviar o e-mail
 def enviar_email(pedido, total):
-remetente = "seuemail@gmail.com"  # Substitua pelo seu e-mail
-senha = "suasenha"  # Use senha do app se necessário (não use senhas reais diretamente no código)
-destinatario = "seuemail@gmail.com"  # E-mail para onde o pedido será enviado
+    remetente = "seuemail@gmail.com"  # Substitua pelo seu e-mail
+    senha = "suasenha"  # Use senha do app se necessário (não use senhas reais diretamente no código)
+    destinatario = "seuemail@gmail.com"  # E-mail para onde o pedido será enviado
 
-msg = MIMEMultipart()
-msg["From"] = remetente
-msg["To"] = destinatario
-msg["Subject"] = "Novo Pedido - Loja Sustentável"
+    msg = MIMEMultipart()
+    msg["From"] = remetente
+    msg["To"] = destinatario
+    msg["Subject"] = "Novo Pedido - Loja Sustentável"
 
-corpo_email = f"""
-Novo pedido recebido! 🛍️
+    corpo_email = f"""
+    Novo pedido recebido! 🛍️
 
-Produtos:
-{pedido}
+    Produtos:
+    {pedido}
 
-Total: 💲{total:.2f}
+    Total: 💲{total:.2f}
 
-Forma de pagamento: Transferência bancária / MB Way / PayPal
-Endereço de entrega: [Preencher com o endereço do cliente]
+    Forma de pagamento: Transferência bancária / MB Way / PayPal
+    Endereço de entrega: [Preencher com o endereço do cliente]
 
-Obrigado por sua compra! 🌱
-"""
+    Obrigado por sua compra! 🌱
+    """
 
-msg.attach(MIMEText(corpo_email, "plain"))
+    msg.attach(MIMEText(corpo_email, "plain"))
 
-try:
-    servidor = smtplib.SMTP("smtp.gmail.com", 587)
-    servidor.starttls()
-    servidor.login(remetente, senha)
-    servidor.sendmail(remetente, destinatario, msg.as_string())
-    servidor.quit()
-    return True
-except Exception as e:
-    return False
+    try:
+        servidor = smtplib.SMTP("smtp.gmail.com", 587)
+        servidor.starttls()
+        servidor.login(remetente, senha)
+        servidor.sendmail(remetente, destinatario, msg.as_string())
+        servidor.quit()
+        return True
+    except Exception as e:
+        return False
 
 
 import smtplib
@@ -164,56 +164,56 @@ SMTP_SERVIDOR = "smtp.gmail.com"
 SMTP_PORTA = 587
 
 def enviar_email(pedido, total, endereco, pagamento):
-msg = MIMEMultipart()
-msg["From"] = EMAIL_REMETENTE
-msg["To"] = EMAIL_DESTINATARIO
-msg["Subject"] = "Novo Pedido - Loja Sustentável"
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_REMETENTE
+    msg["To"] = EMAIL_DESTINATARIO
+    msg["Subject"] = "Novo Pedido - Loja Sustentável"
 
-corpo_email = f"""
-🛍️ Novo pedido recebido!
+    corpo_email = f"""
+    🛍️ Novo pedido recebido!
 
-Produtos:
-{pedido}
+    Produtos:
+    {pedido}
 
-Total: 💲{total:.2f}
+    Total: 💲{total:.2f}
 
-Forma de pagamento: {pagamento}
-Endereço de entrega: {endereco}
+    Forma de pagamento: {pagamento}
+    Endereço de entrega: {endereco}
 
-Obrigado por sua compra! 🌱
-"""
-msg.attach(MIMEText(corpo_email, "plain"))
+    Obrigado por sua compra! 🌱
+    """
+    msg.attach(MIMEText(corpo_email, "plain"))
 
-try:
-    servidor = smtplib.SMTP(SMTP_SERVIDOR, SMTP_PORTA)
-    servidor.starttls()
-    servidor.login(EMAIL_REMETENTE, SENHA_EMAIL)
-    servidor.sendmail(EMAIL_REMETENTE, EMAIL_DESTINATARIO, msg.as_string())
-    servidor.quit()
-    return True
-except Exception as e:
-    print(f"Erro ao enviar e-mail: {e}")
-    return False
+    try:
+        servidor = smtplib.SMTP(SMTP_SERVIDOR, SMTP_PORTA)
+        servidor.starttls()
+        servidor.login(EMAIL_REMETENTE, SENHA_EMAIL)
+        servidor.sendmail(EMAIL_REMETENTE, EMAIL_DESTINATARIO, msg.as_string())
+        servidor.quit()
+        return True
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+        return False
 
 # Inicializa o carrinho na sessão
 if "carrinho" not in st.session_state:
-st.session_state["carrinho"] = {}
+    st.session_state["carrinho"] = {}
 
 
-st.sidebar.title("🛒 Carrinho de Compras")
+    st.sidebar.title("🛒 Carrinho de Compras")
 
 if st.session_state["carrinho"]:
-total = 0
-pedido = ""
-for item, qtd in st.session_state["carrinho"].items():
-    preco = next(p["preco"] for p in produtos if p["nome"] == item)
-    subtotal = preco * qtd
-    total += subtotal
-    pedido += f"{item} ({qtd}x) - 💲{subtotal:.2f}\n"
+    total = 0
+    pedido = ""
+    for item, qtd in st.session_state["carrinho"].items():
+        preco = next(p["preco"] for p in produtos if p["nome"] == item)
+        subtotal = preco * qtd
+        total += subtotal
+        pedido += f"{item} ({qtd}x) - 💲{subtotal:.2f}\n"
 
 st.sidebar.write(f"**Total: 💲{total:.2f}**")
-endereco = st.sidebar.text_input("📍 Endereço de Entrega")
-pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
+    endereco = st.sidebar.text_input("📍 Endereço de Entrega")
+    pagamento = st.sidebar.selectbox("💳 Forma de Pagamento", ["Transferência Bancária", "MB Way", "PayPal"])
 
 if st.sidebar.button("✅ Finalizar Pedido"):
     if endereco:

@@ -56,7 +56,7 @@ if aba == "🗺️ Planejar Rota":
         except Exception as e:
             st.error(f"Erro ao calcular a rota: {e}")
 
-with tabs[1]:  # Correção da posição da aba Loja Online
+#with tabs[1]:  # Correção da posição da aba Loja Online
     st.title("🛍️ Loja Sustentável")
 
     # Lista de produtos

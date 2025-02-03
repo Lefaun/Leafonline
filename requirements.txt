@@ -1,0 +1,8 @@
+streamlit
+pandas
+numpy
+networkx
+folium
+scikit-learn
+streamlit-folium
+googlemaps
